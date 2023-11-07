@@ -9,10 +9,10 @@ interface Props {
   arrowTop: number;
   arrowLeft: number;
   arrowRotate: number;
-  onRendered: () => void;
   onUnmount: () => void;
   arrowSize: number;
   position?: ToolTipPosition;
+  visibility?: "visible" | "hidden";
 }
 
 export const TooltipContainer = forwardRef<HTMLDivElement, Props>(
@@ -26,9 +26,9 @@ export const TooltipContainer = forwardRef<HTMLDivElement, Props>(
       arrowLeft,
       arrowRotate,
       arrowSize,
-      onRendered,
       onUnmount,
       position,
+      visibility,
     } = props;
 
     useEffect(() => {
@@ -39,12 +39,7 @@ export const TooltipContainer = forwardRef<HTMLDivElement, Props>(
 
     return (
       <div
-        ref={(el) => {
-          if (!el || !ref) return;
-          // @ts-ignore
-          ref.current = el;
-          onRendered();
-        }}
+        ref={ref}
         className="tooltip-container"
         style={{
           position: "fixed",
@@ -53,6 +48,7 @@ export const TooltipContainer = forwardRef<HTMLDivElement, Props>(
           zIndex: 999,
           display: "inline-block",
           background: color,
+          visibility,
         }}
       >
         <div

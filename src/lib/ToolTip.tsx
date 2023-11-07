@@ -1,4 +1,11 @@
-import React, { FC, ReactNode, useCallback, useEffect, useState } from "react";
+import React, {
+  FC,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import { TooltipContainer } from "./TooltipContainer";
 
@@ -31,8 +38,6 @@ export const ToolTip: FC<Props> = ({
 }) => {
   const [mount, setMount] = useState(false);
   const [show, setShow] = useState(false);
-  const [contentRendered, setContentRendered] = useState(false);
-  const [rootRendered, setRootRendered] = useState(false);
   const [pos, setPos] = useState({
     top: 0,
     left: 0,
@@ -41,86 +46,91 @@ export const ToolTip: FC<Props> = ({
     arrowRotate: 0,
   });
 
-  const rootRef = React.useRef<HTMLDivElement>();
-  const contentRef = React.useRef<HTMLDivElement>(null);
-  const rootElement = React.cloneElement(children, {
-    ...children.props,
-    ref: (el: any) => {
-      if (!el || !rootRef) return;
-      rootRef.current = el;
-      setRootRendered(true);
-    },
-    onMouseEnter: () => trigger === "hover" && setShow(true),
-    onMouseLeave: () => trigger === "hover" && setShow(false),
-    onClick: () => trigger === "click" && setShow(true),
-  });
+  const [rootElRef, setRootElRef] = useState<HTMLDivElement | null>(null);
+  const [contentElRef, setContentElRef] = useState<HTMLDivElement | null>(null);
+
+  const rootElement = useMemo(
+    () =>
+      React.cloneElement(children, {
+        ...children.props,
+        ref: (el: any) => {
+          setRootElRef(el);
+        },
+        onMouseEnter: () => {
+          trigger === "hover" && setShow(true);
+        },
+        onMouseLeave: () => trigger === "hover" && setShow(false),
+        onClick: () => trigger === "click" && setShow(true),
+      }),
+    [children, trigger],
+  );
 
   const calcPos = useCallback(() => {
-    if (!contentRendered || !rootRendered) return;
-    const rect = rootRef.current?.getBoundingClientRect();
-    const contentRect = contentRef.current?.getBoundingClientRect()!;
+    if (!rootElRef || !contentElRef) return;
+    const rect = rootElRef.getBoundingClientRect();
+    const contentRect = contentElRef.getBoundingClientRect();
 
-    if (rect && contentRect) {
-      const maxLeft = window.innerWidth - contentRect.width;
-
-      let adjustedDir = dir;
-      if (
-        dir === "bottom" &&
-        rect.bottom + contentRect.height > window.innerHeight
-      ) {
-        adjustedDir = "top";
-      }
-
-      if (dir === "top" && rect.top - contentRect.height < 0) {
-        adjustedDir = "bottom";
-      }
-
-      switch (adjustedDir) {
-        case "top":
-          setPos({
-            top: rect.top - contentRect.height - margin,
-            left: Math.min(
-              rect.left + rect.width / 2 - contentRect.width / 2,
-              maxLeft,
-            ),
-            arrowLeft: rect.left + rect.width / 2,
-            arrowTop: rect.top - margin,
-            arrowRotate: 0,
-          });
-          break;
-        case "bottom":
-          setPos({
-            top: rect.bottom + margin,
-            left: Math.min(
-              rect.left + rect.width / 2 - contentRect.width / 2,
-              maxLeft,
-            ),
-            arrowLeft: rect.left + rect.width / 2,
-            arrowTop: rect.top + rect.height + margin - arrowSize * 2,
-            arrowRotate: 180,
-          });
-          break;
-        case "left":
-          setPos({
-            top: rect.top + rect.height / 2 - contentRect.height / 2,
-            left: rect.left - contentRect.width - margin,
-            arrowLeft: rect.left - margin + arrowSize,
-            arrowTop: rect.top + rect.height / 2 - arrowSize,
-            arrowRotate: -90,
-          });
-          break;
-        case "right":
-          setPos({
-            top: rect.top + rect.height / 2 - contentRect.height / 2,
-            left: rect.right + margin,
-            arrowLeft: rect.left + rect.width + margin - arrowSize,
-            arrowTop: rect.top + rect.height / 2 - arrowSize,
-            arrowRotate: 90,
-          });
-          break;
-      }
+    let adjustedDir = dir;
+    if (
+      dir === "bottom" &&
+      rect.bottom + contentRect.height > window.innerHeight
+    ) {
+      adjustedDir = "top";
     }
-  }, [contentRendered, rootRendered, dir, margin, arrowSize]);
+
+    if (dir === "top" && rect.top - contentRect.height < 0) {
+      adjustedDir = "bottom";
+    }
+
+    switch (adjustedDir) {
+      case "top":
+        setPos({
+          top: rect.top - contentRect.height - margin,
+          left: Math.min(
+            rect.left + rect.width / 2 - contentRect.width / 2,
+            window.innerWidth - contentRect.width,
+          ),
+          arrowLeft: rect.left + rect.width / 2,
+          arrowTop: rect.top - margin,
+          arrowRotate: 0,
+        });
+        break;
+      case "bottom":
+        setPos({
+          top: rect.bottom + margin,
+          left: Math.min(
+            rect.left + rect.width / 2 - contentRect.width / 2,
+            window.innerWidth - contentRect.width,
+          ),
+          arrowLeft: rect.left + rect.width / 2,
+          arrowTop: rect.top + rect.height + margin - arrowSize * 2,
+          arrowRotate: 180,
+        });
+        break;
+      case "left":
+        setPos({
+          top: rect.top + rect.height / 2 - contentRect.height / 2,
+          left: rect.left - contentRect.width - margin,
+          arrowLeft: rect.left - margin + arrowSize,
+          arrowTop: rect.top + rect.height / 2 - arrowSize,
+          arrowRotate: -90,
+        });
+        break;
+      case "right":
+        setPos({
+          top: rect.top + rect.height / 2 - contentRect.height / 2,
+          left: rect.right + margin,
+          arrowLeft: rect.left + rect.width + margin - arrowSize,
+          arrowTop: rect.top + rect.height / 2 - arrowSize,
+          arrowRotate: 90,
+        });
+        break;
+    }
+  }, [rootElRef, contentElRef, dir, margin, arrowSize]);
+
+  useEffect(() => {
+    setMount(true);
+  }, []);
 
   useEffect(() => {
     calcPos();
@@ -130,7 +140,7 @@ export const ToolTip: FC<Props> = ({
     if (trigger !== "click") return;
 
     const handleClickOutside = (e: MouseEvent) => {
-      if (rootRef.current?.contains(e.target as Node)) return;
+      if (rootElRef?.contains(e.target as Node)) return;
       setShow(false);
     };
 
@@ -139,7 +149,7 @@ export const ToolTip: FC<Props> = ({
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [trigger]);
+  }, [rootElRef, trigger]);
 
   useEffect(() => {
     const handler = () => {
@@ -154,18 +164,18 @@ export const ToolTip: FC<Props> = ({
     };
   }, [calcPos]);
 
-  useEffect(() => {
-    setMount(true);
-  }, []);
-
   if (!mount) return null;
+  const isPosAvailable = pos.top !== 0 && pos.left !== 0;
+
   return (
     <>
       {rootElement}
       {(show || forceShow) &&
         createPortal(
           <TooltipContainer
-            ref={contentRef}
+            ref={(el) => {
+              setContentElRef(el);
+            }}
             color={color}
             top={pos.top}
             left={pos.left}
@@ -173,9 +183,9 @@ export const ToolTip: FC<Props> = ({
             arrowLeft={pos.arrowLeft}
             arrowRotate={pos.arrowRotate}
             arrowSize={arrowSize}
-            onRendered={() => setContentRendered(true)}
-            onUnmount={() => setContentRendered(false)}
+            onUnmount={() => setContentElRef(null)}
             position={position}
+            visibility={isPosAvailable ? "visible" : "hidden"}
           >
             {content}
           </TooltipContainer>,
