@@ -1,5 +1,7 @@
 {
   "name": "simple-tooltip-react",
+  "repository": "https://github.com/livemehere/simple-tooltip-react",
+  "author": "livemehere",
   "version": "1.0.0",
   "license": "MIT",
   "type": "module",
