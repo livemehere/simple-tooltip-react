@@ -1,0 +1,78 @@
+import { forwardRef, ReactNode, useEffect } from "react";
+import { ToolTipPosition } from "./ToolTip";
+
+interface Props {
+  children: ReactNode;
+  color?: string;
+  top: number;
+  left: number;
+  arrowTop: number;
+  arrowLeft: number;
+  arrowRotate: number;
+  onRendered: () => void;
+  onUnmount: () => void;
+  arrowSize: number;
+  position?: ToolTipPosition;
+}
+
+export const TooltipContainer = forwardRef<HTMLDivElement, Props>(
+  (props, ref) => {
+    const {
+      children,
+      color,
+      top,
+      left,
+      arrowTop,
+      arrowLeft,
+      arrowRotate,
+      arrowSize,
+      onRendered,
+      onUnmount,
+      position,
+    } = props;
+
+    useEffect(() => {
+      return () => {
+        onUnmount();
+      };
+    }, []);
+
+    return (
+      <div
+        ref={(el) => {
+          if (!el || !ref) return;
+          // @ts-ignore
+          ref.current = el;
+          onRendered();
+        }}
+        className="tooltip-container"
+        style={{
+          position: "fixed",
+          top: `${top + (position?.top || 0)}px`,
+          left: `${left + (position?.left || 0)}px`,
+          zIndex: 999,
+          display: "inline-block",
+          background: color,
+        }}
+      >
+        <div
+          style={{
+            position: "fixed",
+            zIndex: 998,
+            top: `${arrowTop + (position?.top || 0)}px`,
+            left: `${arrowLeft + (position?.left || 0)}px`,
+            transform: `rotate(${arrowRotate}deg)`,
+            transformOrigin: "center center",
+            marginLeft: `${-arrowSize}px`,
+            borderWidth: `${arrowSize}px`,
+            borderStyle: "solid",
+            borderColor: `${color} transparent transparent transparent`,
+          }}
+        />
+        {children}
+      </div>
+    );
+  },
+);
+
+TooltipContainer.displayName = "TooltipContainer";
