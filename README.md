@@ -1,5 +1,7 @@
 # simple-tooltip-react
 
+[npm](https://www.npmjs.com/package/simple-tooltip-react?activeTab=readme)
+
 This library is a simple ToolTip Component without any dependencies except React.   
 Follow simple guide to use it.
 
