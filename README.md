@@ -9,11 +9,13 @@ Follow simple guide to use it.
 
 - Support `hover` and `click` trigger.
 - Support `top`, `bottom`, `left`, `right` direction.
-- Support custom `margin` and `arrowSize`.
-- Support custom `color` and `position`.
+- Customize `margin` and `position` to adjust tooltip position.
+- Support custom `color` and `arrowSize`.
 - Support `forceShow` to show tooltip without trigger.
+- `disabled` props to disable tooltip.
+- `onChangeFinalShow` to listen final show state change.
 
-### Advanced Usage
+### Tips
 
 - Set Arrow size to 0 to hide arrow.
 - Set color to `transparent` to hide background. Only depends on your content.
@@ -26,7 +28,7 @@ npm install simple-tooltip-react
 yarn add simple-tooltip-react
 ```
 
-## Usage
+## Example
 
 ```jsx
 // That's it. You can use it anywhere.
@@ -35,18 +37,25 @@ yarn add simple-tooltip-react
 </ToolTip>
 ```
 
-## Props
+## API
 
 ```tsx
+export type ToolTipPosition = {
+    top: number;
+    left: number;
+};
+
 interface Props {
     content: ReactNode;
-    dir?: 'top' | 'bottom' | 'left' | 'right';
+    dir?: "top" | "bottom" | "left" | "right"; // default: top
     children: JSX.Element;
     margin?: number;
-    trigger?: 'hover' | 'click';
+    trigger?: "hover" | "click"; // default: hover
     forceShow?: boolean;
     arrowSize?: number;
-    color?: string;
+    color?: string; // default: black
     position?: ToolTipPosition;
+    disabled?: boolean;
+    onChangeFinalShow?: (show: boolean) => void;
 }
 ```

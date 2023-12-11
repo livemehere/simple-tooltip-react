@@ -2,13 +2,13 @@
   "name": "simple-tooltip-react",
   "repository": "https://github.com/livemehere/simple-tooltip-react",
   "author": "livemehere",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "publish": "yarn build && npm publish --access public"
+    "publish": "npm publish --access public"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
