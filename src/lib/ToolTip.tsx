@@ -24,6 +24,8 @@ interface Props {
   arrowSize?: number;
   color?: string;
   position?: ToolTipPosition;
+  disabled?: boolean;
+  onChangeFinalShow?: (show: boolean) => void;
 }
 export const ToolTip: FC<Props> = ({
   children,
@@ -35,6 +37,8 @@ export const ToolTip: FC<Props> = ({
   color = "black",
   forceShow = false,
   position,
+  disabled = false,
+  onChangeFinalShow,
 }) => {
   const [mount, setMount] = useState(false);
   const [show, setShow] = useState(false);
@@ -46,8 +50,17 @@ export const ToolTip: FC<Props> = ({
     arrowRotate: 0,
   });
 
-  const [rootElRef, setRootElRef] = useState<HTMLDivElement | null>(null);
+  const [rootElRef, setRootElRef] = useState<HTMLElement | null>(null);
   const [contentElRef, setContentElRef] = useState<HTMLDivElement | null>(null);
+  const finalShow = !disabled && (show || forceShow);
+
+  useEffect(() => {
+    setMount(true);
+  }, []);
+
+  useEffect(() => {
+    onChangeFinalShow?.(finalShow);
+  }, [finalShow]);
 
   const rootElement = useMemo(
     () =>
@@ -56,20 +69,27 @@ export const ToolTip: FC<Props> = ({
         ref: (el: any) => {
           setRootElRef(el);
         },
-        onMouseEnter: () => {
-          trigger === "hover" && setShow(true);
+        onPointerEnter: (e: React.PointerEvent) => {
+          if (trigger === "hover" && e.pointerType === "touch") return;
+          if (trigger === "hover") setShow(true);
+          if (children.props.onMouseEnter) children.props.onMouseEnter(e);
         },
-        onMouseLeave: () => trigger === "hover" && setShow(false),
-        onClick: () => trigger === "click" && setShow(true),
+        onPointerLeave: () => {
+          if (trigger === "hover") setShow(false);
+          if (children.props.onMouseLeave) children.props.onMouseLeave();
+        },
+        onClick: (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
+          if (trigger === "click") setShow((prev) => !prev);
+          if (children.props.onClick) children.props.onClick(e);
+        },
       }),
     [children, trigger],
   );
-
   const calcPos = useCallback(() => {
     if (!rootElRef || !contentElRef) return;
     const rect = rootElRef.getBoundingClientRect();
     const contentRect = contentElRef.getBoundingClientRect();
-
+    const isOverWindowInnerWidth = window.innerWidth <= contentRect.width;
     let adjustedDir = dir;
     if (
       dir === "bottom" &&
@@ -86,10 +106,12 @@ export const ToolTip: FC<Props> = ({
       case "top":
         setPos({
           top: rect.top - contentRect.height - margin,
-          left: Math.min(
-            rect.left + rect.width / 2 - contentRect.width / 2,
-            window.innerWidth - contentRect.width,
-          ),
+          left: isOverWindowInnerWidth
+            ? 0.01
+            : Math.max(
+                rect.left + rect.width / 2 - contentRect.width / 2,
+                0.01,
+              ),
           arrowLeft: rect.left + rect.width / 2,
           arrowTop: rect.top - margin,
           arrowRotate: 0,
@@ -98,10 +120,12 @@ export const ToolTip: FC<Props> = ({
       case "bottom":
         setPos({
           top: rect.bottom + margin,
-          left: Math.min(
-            rect.left + rect.width / 2 - contentRect.width / 2,
-            window.innerWidth - contentRect.width,
-          ),
+          left: isOverWindowInnerWidth
+            ? 0.01
+            : Math.min(
+                rect.left + rect.width / 2 - contentRect.width / 2,
+                window.innerWidth - contentRect.width - 0.01,
+              ),
           arrowLeft: rect.left + rect.width / 2,
           arrowTop: rect.top + rect.height + margin - arrowSize * 2,
           arrowRotate: 180,
@@ -129,10 +153,6 @@ export const ToolTip: FC<Props> = ({
   }, [rootElRef, contentElRef, dir, margin, arrowSize]);
 
   useEffect(() => {
-    setMount(true);
-  }, []);
-
-  useEffect(() => {
     calcPos();
   }, [calcPos]);
 
@@ -140,7 +160,12 @@ export const ToolTip: FC<Props> = ({
     if (trigger !== "click") return;
 
     const handleClickOutside = (e: MouseEvent) => {
-      if (rootElRef?.contains(e.target as Node)) return;
+      if (
+        rootElRef?.contains(e.target as Node) ||
+        contentElRef?.contains(e.target as Node)
+      ) {
+        return;
+      }
       setShow(false);
     };
 
@@ -149,7 +174,7 @@ export const ToolTip: FC<Props> = ({
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [rootElRef, trigger]);
+  }, [contentElRef, rootElRef, trigger]);
 
   useEffect(() => {
     const handler = () => {
@@ -170,7 +195,7 @@ export const ToolTip: FC<Props> = ({
   return (
     <>
       {rootElement}
-      {(show || forceShow) &&
+      {finalShow &&
         createPortal(
           <TooltipContainer
             ref={(el) => {

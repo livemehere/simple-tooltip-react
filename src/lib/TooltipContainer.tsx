@@ -1,5 +1,5 @@
 import { forwardRef, ReactNode, useEffect } from "react";
-import { ToolTipPosition } from "./ToolTip";
+import { ToolTipPosition } from "./ToolTip.tsx";
 
 interface Props {
   children: ReactNode;
