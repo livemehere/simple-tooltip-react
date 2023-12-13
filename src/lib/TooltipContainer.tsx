@@ -49,6 +49,7 @@ export const TooltipContainer = forwardRef<HTMLDivElement, Props>(
           display: "inline-block",
           background: color,
           visibility,
+          color: "#fff",
         }}
       >
         <div
