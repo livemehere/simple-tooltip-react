@@ -5,6 +5,8 @@
 This library is a simple ToolTip Component without any dependencies except React.   
 Follow simple guide to use it.
 
+[Documentation - livemehere-dev-packs](https://livemehere.github.io/livemehere-dev-packs/docs/category/simple-tooltip-react)
+
 ## Features
 
 - Support `hover` and `click` trigger.
@@ -32,7 +34,7 @@ yarn add simple-tooltip-react
 
 ```jsx
 // That's it. You can use it anywhere.
-<ToolTip content={<div style={{ color: "white" }}>tool</div>}>
+<ToolTip content={<div>tool</div>}>
     <div style={{ display: "inline-block", margin: "100px 100px" }}>A</div>
 </ToolTip>
 ```
